@@ -1,0 +1,90 @@
+.settings-container {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 40px;
+  background-color: #f9fafb;
+}
+
+
+.settings-title {
+  font-size: 26px;
+  font-weight: 600;
+  margin-bottom: 30px;
+}
+
+
+.settings-card {
+  width: 360px;
+  background-color: #ffffff;
+  padding: 22px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.settings-profile {
+  text-align: center;
+  margin-bottom: 18px;
+}
+
+.settings-avatar {
+  font-size: 50px;
+}
+
+.settings-role {
+  margin-top: 6px;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.settings-card label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  margin-top: 12px;
+  margin-bottom: 4px;
+}
+
+.settings-card input {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  font-size: 14px;
+  outline: none;
+}
+
+.settings-card input:focus {
+  border-color: #2563eb;
+}
+
+.settings-btn {
+  width: 100%;
+  margin-top: 18px;
+  padding: 10px;
+  background-color: #2563eb;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.settings-btn:hover {
+  background-color: #1e4fd8;
+}
+
+.settings-success {
+  margin-top: 12px;
+  color: #16a34a;
+  font-size: 14px;
+}
+
+.settings-error {
+  margin-top: 12px;
+  color: #dc2626;
+  font-size: 14px;
+}
