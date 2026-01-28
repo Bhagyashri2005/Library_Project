@@ -1,5 +1,5 @@
 .members-page { padding: 20px; }
-.role-selector { margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+.role-selector { margin-bottom: 20px; display: flex;  gap: 10px; padding: 12px; box-shadow: 0 3px 10px rgba(0,0,0,0.08);}
 .members-list table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
 .members-list th, .members-list td { border: 1px solid #ccc; padding: 8px; text-align: left; }
 .member-form input { margin: 5px; padding: 8px; border: 1px solid #ccc; border-radius: 6px; }
@@ -7,3 +7,5 @@
 .btn { padding: 6px 12px; border-radius: 6px; background: #7b2cbf; color: white; border: none; cursor: pointer; }
 .btn.primary { background: #5a1b9e; }
 .center { text-align: center; }
+.members-filters{display: flex;flex-wrap: wrap;gap: 10px;background: #fff;padding: 12px;border-radius: 10px;box-shadow: 0 3px 10px rgba(0,0,0,0.08);margin-bottom: 16px;}
+.btn.outline {border: 1px solid #4c1d95;color: #4c1d95;background: white;}

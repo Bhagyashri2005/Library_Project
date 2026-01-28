@@ -1,0 +1,235 @@
+/* ================================
+   GLOBAL THEME VARIABLES
+   ================================ */
+
+:root {
+  /* Brand */
+  --primary: #2563eb;
+  --primary-hover: #1e40af;
+
+  /* Status */
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+
+  /* Backgrounds */
+  --bg-app: #f8fafc;
+  --bg-card: #ffffff;
+
+  /* Borders */
+  --border: #e5e7eb;
+
+  /* Text */
+  --text-heading: #0f172a;
+  --text-body: #334155;
+  --text-muted: #64748b;
+}
+
+/* ================================
+   GLOBAL RESET & BASE
+   ================================ */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg-app);
+  color: var(--text-body);
+  font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+}
+
+/* ================================
+   TYPOGRAPHY
+   ================================ */
+
+.page-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-heading);
+  margin-bottom: 16px;
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-heading);
+  margin-bottom: 12px;
+}
+
+.text-muted {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+/* ================================
+   CARD (used everywhere)
+   ================================ */
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin-bottom: 16px;
+}
+
+/* ================================
+   INPUTS & SELECTS (STANDARD SIZE)
+   ================================ */
+
+.input,
+.select {
+  height: 38px;
+  padding: 0 12px;
+  font-size: 14px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: white;
+  color: var(--text-body);
+  outline: none;
+}
+
+.input::placeholder {
+  color: var(--text-muted);
+}
+
+.input:focus,
+.select:focus {
+  border-color: var(--primary);
+}
+
+/* ================================
+   FILTER BAR (STANDARD LAYOUT)
+   ================================ */
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+/* ================================
+   BUTTONS (STANDARD)
+   ================================ */
+
+.btn {
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  background: var(--primary);
+  color: white;
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.btn:hover {
+  background: var(--primary-hover);
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn.secondary {
+  background: #e2e8f0;
+  color: var(--text-body);
+}
+
+.btn.secondary:hover {
+  background: #cbd5f5;
+}
+
+.btn.danger {
+  background: var(--danger);
+}
+
+.btn.danger:hover {
+  background: #dc2626;
+}
+
+.btn.small {
+  height: 30px;
+  padding: 0 10px;
+  font-size: 13px;
+}
+
+/* ================================
+   TABLE STANDARD
+   ================================ */
+
+.table-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead {
+  background: #f1f5f9;
+}
+
+th,
+td {
+  padding: 12px;
+  text-align: left;
+  font-size: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+th {
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+tbody tr:hover {
+  background: #f8fafc;
+}
+
+/* ================================
+   PAGINATION
+   ================================ */
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+/* ================================
+   MODAL STANDARD
+   ================================ */
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.modal-content {
+  background: var(--bg-card);
+  border-radius: 10px;
+  padding: 24px;
+  width: 400px;
+  max-width: 90%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}

@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from routers import auth, scan, logs, dashboard, members,timetable
+from routers import auth, scan, logs, dashboard, members,timetable,academic_calendar
 
 app = FastAPI()
 
@@ -20,6 +20,7 @@ app.include_router(logs.router)
 app.include_router(dashboard.router)
 app.include_router(members.router)
 app.include_router(timetable.router)
+app.include_router(academic_calendar.router)
 
 @app.get("/")
 def home():

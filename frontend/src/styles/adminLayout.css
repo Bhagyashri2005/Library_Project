@@ -1,0 +1,70 @@
+.dashboard-root {
+  display: flex;
+  min-height: 100vh;
+  background: var(--bg-app);
+}
+
+/* Sidebar */
+.sidebar {
+  width: 240px;
+  background: var(--bg-card);
+  border-right: 1px solid var(--border);
+  padding: 20px 16px;
+}
+
+.brand {
+  margin-bottom: 24px;
+}
+
+.logo {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.brand-title {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* Navigation */
+.nav-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.nav-list li {
+  padding: 10px 14px;
+  margin-bottom: 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--text-body);
+  transition: background 0.2s ease;
+}
+
+.nav-list li:hover {
+  background: #f1f5f9;
+}
+
+.nav-list li.active {
+  background: var(--primary);
+  color: white;
+  font-weight: 500;
+}
+
+.nav-list li.logout {
+  margin-top: 12px;
+  color: var(--danger);
+}
+
+.nav-list li.logout:hover {
+  background: #fee2e2;
+}
+
+/* Main area */
+.main-area {
+  flex: 1;
+  padding: 24px;
+}

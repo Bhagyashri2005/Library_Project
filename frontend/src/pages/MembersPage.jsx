@@ -163,21 +163,46 @@ export default function MembersPage() {
     }
   };
 
+  const clearFilters = () => {
+    setFilters({
+      q: "",
+      role: "",
+      action: "",
+      division: "",
+      batch: "",
+      year: "",
+      department: "",
+    });
+    fetchLogs(1);
+  };
+
   // ================= EDIT =================
   const openEdit = (m) => {
-    setEditForm({
-      member_id: m.student_id || m.teacher_id,
-      name: m.name,
-      department: m.department,
-      year: m.year || "",
-      division: m.division || "",
-      batch: m.batch || "",
-      email: m.email,
-      contact_no: m.contact_no,
-      designation: m.designation || ""
-    });
+    if (role === "student") {
+      setEditForm({
+        member_id: m.student_id,
+        name: m.name,
+        department: m.department,
+        year: m.year,
+        division: m.division,
+        batch: m.batch,
+        email: m.email,
+        contact_no: m.contact_no,
+      });
+    } else {
+      setEditForm({
+        member_id: m.teacher_id,
+        name: m.name,
+        department: m.department,
+        email: m.email,
+        contact_no: m.contact_no,
+        designation: m.designation,
+      });
+    }
+
     setShowEdit(true);
   };
+
 
   const handleUpdate = async () => {
     const fd = new FormData();
@@ -320,6 +345,7 @@ export default function MembersPage() {
               >
                 Apply
               </button>
+              <button className="btn outline" onClick={clearFilters}>Clear</button>
             </div>
 
             {/* MEMBERS TABLE */}
@@ -412,31 +438,82 @@ export default function MembersPage() {
         {showEdit && (
           <div className="modal-backdrop">
             <div className="modal-box">
-              <h3>Edit {role}</h3>
+              <h3>Edit {role === "student" ? "Student" : "Teacher"}</h3>
 
               <input value={editForm.member_id} disabled />
-              <input value={editForm.name}
-                onChange={(e)=>setEditForm({...editForm,name:e.target.value})} />
-              <input value={editForm.department}
-                onChange={(e)=>setEditForm({...editForm,department:e.target.value})} />
-              <input value={editForm.email}
-                onChange={(e)=>setEditForm({...editForm,email:e.target.value})} />
-              <input value={editForm.contact_no}
-                onChange={(e)=>setEditForm({...editForm,contact_no:e.target.value})} />
-                <input value={editForm.year}
-                onChange={(e)=>setEditForm({...editForm,year:e.target.value})} />
-                <input value={editForm.division}
-                onChange={(e)=>setEditForm({...editForm,division:e.target.value})} />
-                <input value={editForm.batch}
-                onChange={(e)=>setEditForm({...editForm,batch:e.target.value})} />
 
-              {role==="teacher" && (
-                <input value={editForm.designation}
-                  onChange={(e)=>setEditForm({...editForm,designation:e.target.value})}/>
+              <input
+                placeholder="Name"
+                value={editForm.name}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, name: e.target.value })
+                }
+              />
+
+              <input
+                placeholder="Department"
+                value={editForm.department}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, department: e.target.value })
+                }
+              />
+
+              <input
+                placeholder="Email"
+                value={editForm.email}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, email: e.target.value })
+                }
+              />
+
+              <input
+                placeholder="Contact No"
+                value={editForm.contact_no}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, contact_no: e.target.value })
+                }
+              />
+
+              {/* STUDENT ONLY */}
+              {role === "student" && (
+                <>
+                  <input
+                    placeholder="Year"
+                    value={editForm.year}
+                    onChange={(e) =>
+                      setEditForm({ ...editForm, year: e.target.value })
+                    }
+                  />
+                  <input
+                    placeholder="Division"
+                    value={editForm.division}
+                    onChange={(e) =>
+                      setEditForm({ ...editForm, division: e.target.value })
+                    }
+                  />
+                  <input
+                    placeholder="Batch"
+                    value={editForm.batch}
+                    onChange={(e) =>
+                      setEditForm({ ...editForm, batch: e.target.value })
+                    }
+                  />
+                </>
+              )}
+
+              {/* TEACHER ONLY */}
+              {role === "teacher" && (
+                <input
+                  placeholder="Designation"
+                  value={editForm.designation}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, designation: e.target.value })
+                  }
+                />
               )}
 
               <div className="modal-actions">
-                <button className="btn outline" onClick={()=>setShowEdit(false)}>
+                <button className="btn outline" onClick={() => setShowEdit(false)}>
                   Cancel
                 </button>
                 <button className="btn primary" onClick={handleUpdate}>
@@ -446,6 +523,7 @@ export default function MembersPage() {
             </div>
           </div>
         )}
+
 
             {/* ADD MEMBER */}
             <div className="member-form">
@@ -537,7 +615,7 @@ export default function MembersPage() {
                   />
                 )}
 
-                <button type="submit" className="btn primary">
+                <button type="submit" className="btn">
                   Add
                 </button>
               </form>

@@ -151,7 +151,7 @@ from email.mime.text import MIMEText
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
 SENDER_EMAIL = "smartlibrary.alerts@gmail.com"
-SENDER_PASSWORD = ""
+SENDER_PASSWORD = "wdyhvocimppklrku"
 
 def send_skip_email(
     teacher_email,
@@ -185,6 +185,29 @@ Smart Library Monitoring System
     server.login(SENDER_EMAIL, SENDER_PASSWORD)
     server.send_message(msg)
     server.quit()
+
+
+def normalize_text(value: str, mode="upper"):
+    """
+    Normalizes text to make the system case-insensitive.
+    Modes: upper, lower, title, sentence
+    """
+    if value is None:
+        return None
+
+    value = value.strip()
+
+    if mode == "upper":
+        return value.upper()
+    elif mode == "lower":
+        return value.lower()
+    elif mode == "title":
+        return value.title()
+    elif mode == "sentence":
+        return value.capitalize()
+
+    return value
+
 
 # ======================================================
 # TEMPORARY TEST CODE (ADD ONLY FOR TESTING)

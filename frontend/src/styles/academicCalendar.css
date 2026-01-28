@@ -1,0 +1,26 @@
+.calendar-root { padding: 20px; }
+.page-title { font-size: 22px; font-weight: 600; margin-bottom: 15px; }
+
+.calendar-card { background:#fff; padding:15px; border-radius:10px; margin-bottom:20px; }
+.section-title { font-size:16px; font-weight:600; margin-bottom:10px; }
+
+.calendar-filter-bar { display:flex; gap:10px; margin-bottom:12px; }
+.calendar-filter-bar input, .calendar-filter-bar select { padding:7px 10px; border-radius:6px; border:1px solid #ccc; }
+
+.calendar-table { width:100%; border-collapse:collapse; }
+.calendar-table th, .calendar-table td { padding:10px; border-bottom:1px solid #e5e7eb; }
+
+.primary-btn { background:#7c3aed; color:#fff; border:none; padding:7px 18px; border-radius:6px; cursor:pointer; }
+.clear-btn { background:#9ca3af; color:#fff; border:none; padding:7px 16px; border-radius:6px; }
+
+.edit-btn { background:#7c3aed; color:#fff; border:none; padding:5px 12px; border-radius:6px; margin-right:6px; }
+.delete-btn { background:#ef4444; color:#fff; border:none; padding:5px 12px; border-radius:6px; }
+
+.calendar-upload-bar { display:flex; gap:10px; align-items:center; margin:15px 20px; }
+.calendar-upload-bar input, .calendar-upload-bar select { padding:7px 10px; border-radius:6px; border:1px solid #ccc; }
+
+.pagination { display:flex; justify-content:flex-end; gap:12px; margin-top:12px; }
+
+.modal { position:fixed; inset:0; background:rgba(0,0,0,0.4); display:flex; justify-content:center; align-items:center; }
+.modal-box { background:#fff; padding:20px; border-radius:10px; width:320px; }
+.modal-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:10px; }

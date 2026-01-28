@@ -4,10 +4,12 @@ import AdminLayout from "../components/AdminLayout";
 import "../styles/timetable.css";
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const ROWS_PER_PAGE = 10;
 
 export default function TimetablePage() {
   const [day, setDay] = useState("Monday");
   const [timetable, setTimetable] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
 
   // filters
   const [filters, setFilters] = useState({
@@ -24,14 +26,29 @@ export default function TimetablePage() {
     batches: []
   });
 
-  // edit modal
+  // inline add
+  const [newEntry, setNewEntry] = useState({
+    department: "",
+    year: "",
+    division: "",
+    batch: "",
+    subject: "",
+    teacher_id: "",
+    start_time: "",
+    end_time: "",
+    type: "Lecture"
+  });
+
+  // edit
   const [showEdit, setShowEdit] = useState(false);
   const [editData, setEditData] = useState(null);
 
   // csv
   const [file, setFile] = useState(null);
 
-  // ================= LOAD TIMETABLE =================
+  // =====================================================
+  // LOAD TIMETABLE
+  // =====================================================
   const loadTimetable = async () => {
     try {
       const res = await axios.get("http://127.0.0.1:8000/admin/timetable", {
@@ -41,24 +58,24 @@ export default function TimetablePage() {
         }
       });
       setTimetable(res.data || []);
+      setCurrentPage(1);
     } catch {
       alert("Failed to load timetable");
     }
   };
 
-  // ================= LOAD FILTER OPTIONS =================
-  const loadFilterOptions = async () => {
+  // =====================================================
+  // LOAD FILTER OPTIONS
+  // =====================================================
+  const loadFilters = async () => {
     try {
-      const res = await axios.get("http://127.0.0.1:8000/admin/timetable/filters", {
-        params: {
-          department: filters.department,
-          year: filters.year,
-          division: filters.division
-        }
-      });
+      const res = await axios.get(
+        "http://127.0.0.1:8000/admin/timetable/filters",
+        { params: filters }
+      );
       setFilterOptions(res.data);
     } catch {
-      alert("Failed to load filter options");
+      alert("Failed to load filters");
     }
   };
 
@@ -67,32 +84,98 @@ export default function TimetablePage() {
   }, [day]);
 
   useEffect(() => {
-    loadFilterOptions();
+    loadFilters();
   }, [filters.department, filters.year, filters.division]);
 
-  // ================= EDIT =================
-  const openEdit = (row) => {
-    setEditData({ ...row });
-    setShowEdit(true);
+  // =====================================================
+  // PAGINATION
+  // =====================================================
+  const totalPages = Math.ceil(timetable.length / ROWS_PER_PAGE);
+  const paginatedData = timetable.slice(
+    (currentPage - 1) * ROWS_PER_PAGE,
+    currentPage * ROWS_PER_PAGE
+  );
+
+  // =====================================================
+  // ADD SINGLE ENTRY (FormData ❗)
+  // =====================================================
+  const handleAddSingle = async (e) => {
+    e.preventDefault();
+
+    const fd = new FormData();
+    fd.append("department", newEntry.department);
+    fd.append("year", newEntry.year);
+    fd.append("division", newEntry.division);
+    fd.append("subject", newEntry.subject);
+    fd.append("teacher_id", newEntry.teacher_id);
+    fd.append("day_of_week", day);
+    fd.append("start_time", newEntry.start_time);
+    fd.append("end_time", newEntry.end_time);
+    fd.append("type", newEntry.type);
+    if (newEntry.batch) fd.append("batch", newEntry.batch);
+
+    try {
+      await axios.post("http://127.0.0.1:8000/admin/timetable/add", fd);
+      alert("Timetable entry added");
+      loadTimetable();
+    } catch (err) {
+      alert(err.response?.data?.detail || "Add failed");
+    }
   };
 
+  // =====================================================
+  // UPDATE ENTRY (FormData ❗)
+  // =====================================================
   const handleUpdate = async (e) => {
     e.preventDefault();
 
+    const fd = new FormData();
+    Object.entries(editData).forEach(([k, v]) => {
+      if (v !== null) fd.append(k, v);
+    });
+
     try {
       await axios.put(
-        `http://127.0.0.1:8000/admin/timetable/update/${editData.id}`,
-        editData
+        `http://127.0.0.1:8000/admin/timetable/update/${editData.timetable_id}`,
+        fd
       );
-      alert("Timetable updated successfully");
+      alert("Updated successfully");
       setShowEdit(false);
       loadTimetable();
     } catch (err) {
       alert(err.response?.data?.detail || "Update failed");
     }
   };
+  
+  // Delete
+  const handleDelete = async (id) => {
+  if (!window.confirm("Are you sure you want to delete this entry?")) return;
 
-  // ================= CSV UPLOAD =================
+  try {
+    await axios.delete(
+      `http://127.0.0.1:8000/admin/timetable/delete/${id}`
+    );
+    alert("Timetable entry deleted");
+    loadTimetable();
+  } catch (err) {
+    alert(err.response?.data?.detail || "Delete failed");
+  }
+};
+
+// =====================================================
+// OPEN EDIT MODAL
+// =====================================================
+const openEdit = (row) => {
+  setEditData({
+    ...row
+  });
+  setShowEdit(true);
+};
+
+
+  // =====================================================
+  // CSV UPLOAD
+  // =====================================================
   const handleUpload = async (e) => {
     e.preventDefault();
     if (!file) return alert("Select CSV file");
@@ -107,326 +190,128 @@ export default function TimetablePage() {
       );
       alert(`Added: ${res.data.added}, Skipped: ${res.data.skipped}`);
       loadTimetable();
-      setFile(null);
     } catch {
-      alert("Upload failed");
+      alert("CSV upload failed");
     }
   };
 
+  // =====================================================
+  // UI
+  // =====================================================
   return (
     <AdminLayout>
-      <div className="tt-page">
-        <h2>Timetable Management</h2>
+      <h2>Timetable Management</h2>
 
-        {/* DAY SELECTOR */}
-        <div className="tt-days">
-          {DAYS.map((d) => (
-            <button
-              key={d}
-              className={day === d ? "active" : ""}
-              onClick={() => setDay(d)}
-            >
-              {d}
-            </button>
-          ))}
-        </div>
-
-        {/* FILTERS */}
-        <div className="tt-filters">
-          <select
-            value={filters.department}
-            onChange={(e) =>
-              setFilters({ department: e.target.value, year: "", division: "", batch: "" })
-            }
+      {/* DAYS */}
+      <div className="tt-days">
+        {DAYS.map((d) => (
+          <button
+            key={d}
+            className={day === d ? "active" : ""}
+            onClick={() => setDay(d)}
           >
-            <option value="">All Departments</option>
-            {filterOptions.departments.map((d) => (
-              <option key={d}>{d}</option>
-            ))}
-          </select>
-
-          <select
-            value={filters.year}
-            onChange={(e) =>
-              setFilters({ ...filters, year: e.target.value, division: "", batch: "" })
-            }
-          >
-            <option value="">All Years</option>
-            {filterOptions.years.map((y) => (
-              <option key={y}>{y}</option>
-            ))}
-          </select>
-
-          <select
-            value={filters.division}
-            onChange={(e) =>
-              setFilters({ ...filters, division: e.target.value, batch: "" })
-            }
-          >
-            <option value="">All Divisions</option>
-            {filterOptions.divisions.map((d) => (
-              <option key={d}>{d}</option>
-            ))}
-          </select>
-
-          <select
-            value={filters.batch}
-            onChange={(e) =>
-              setFilters({ ...filters, batch: e.target.value })
-            }
-          >
-            <option value="">All Batches</option>
-            {filterOptions.batches.map((b) => (
-              <option key={b}>{b}</option>
-            ))}
-          </select>
-
-          <button className="btn" onClick={loadTimetable}>
-            Apply
+            {d}
           </button>
+        ))}
+      </div>
+
+      {/* TABLE */}
+      <div className="tt-card">
+      <table className="tt-table" >
+        <thead>
+          <tr>
+            <th>Dept</th>
+            <th>Year</th>
+            <th>Div</th>
+            <th>Time</th>
+            <th>Subject</th>
+            <th>Teacher</th>
+            <th>Edit</th>
+            <th>Delete</th>
+          </tr>
+        </thead>
+        <tbody>
+          {paginatedData.map((t) => (
+            <tr key={t.timetable_id}>
+              <td>{t.department}</td>
+              <td>{t.year}</td>
+              <td>{t.division}</td>
+              <td>{t.start_time} - {t.end_time}</td>
+              <td>{t.subject}</td>
+              <td>{t.teacher_id}</td>
+              <td>
+                <button className="btn " onClick={() => openEdit(t)}>
+                  Edit
+                </button>
+              </td>
+
+              <td>
+                <button
+                  className="btn danger"
+                  onClick={() => handleDelete(t.timetable_id)}
+                >
+                  Delete
+                </button>
+              </td>
+
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {/* PAGINATION */}
+      {totalPages > 1 && (
+        <div className="pagination">
+          <button disabled={currentPage === 1}
+            onClick={() => setCurrentPage(p => p - 1)}>Prev</button>
+          <span>{currentPage} / {totalPages}</span>
+          <button disabled={currentPage === totalPages}
+            onClick={() => setCurrentPage(p => p + 1)}>Next</button>
         </div>
+      )}
+      </div>
 
-        {/* TABLE */}
-        <div className="tt-table">
-          <h3>Timetable Entries</h3>
-          <table>
-            <thead>
-              <tr>
-                <th>Dept</th>
-                <th>Year</th>
-                <th>Div</th>
-                <th>Day</th>
-                <th>Start</th>
-                <th>End</th>
-                <th>Subject</th>
-                <th>Teacher ID</th>
-                <th>Edit</th>
-              </tr>
-            </thead>
+      {/* INLINE ADD */}
+      <div className="add-form">
+      <h3>Add Entry</h3>
+      <form onSubmit={handleAddSingle}>
+        <input placeholder="Dept" onChange={e=>setNewEntry({...newEntry,department:e.target.value})}/>
+        <input placeholder="Year" onChange={e=>setNewEntry({...newEntry,year:e.target.value})}/>
+        <input placeholder="Division" onChange={e=>setNewEntry({...newEntry,division:e.target.value})}/>
+        <input placeholder="Batch (optional)" onChange={e=>setNewEntry({...newEntry,batch:e.target.value})}/>
+        <input placeholder="Subject" onChange={e=>setNewEntry({...newEntry,subject:e.target.value})}/>
+        <input placeholder="Teacher ID" onChange={e=>setNewEntry({...newEntry,teacher_id:e.target.value})}/>
+        <input type="time" onChange={e=>setNewEntry({...newEntry,start_time:e.target.value})}/>
+        <input type="time" onChange={e=>setNewEntry({...newEntry,end_time:e.target.value})}/>
+        <select onChange={e=>setNewEntry({...newEntry,type:e.target.value})}>
+          <option>Lecture</option>
+          <option>Practical</option>
+        </select>
+        <button className="btn">Add</button>
+      </form>
+      
 
-            <tbody>
-              {timetable.length === 0 ? (
-                <tr>
-                  <td colSpan="9" className="center">No records found</td>
-                </tr>
-              ) : (
-                timetable.map((t) => (
-                  <tr key={t.id}>
-                    <td>{t.department}</td>
-                    <td>{t.year}</td>
-                    <td>{t.division}</td>
-                    <td>{t.day_of_week}</td>
-                    <td>{t.start_time}</td>
-                    <td>{t.end_time}</td>
-                    <td>{t.subject}</td>
-                    <td>{t.teacher_id}</td>
-                    <td>
-                      <button className="btn small" onClick={() => openEdit(t)}>
-                        Edit
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+      {/* CSV */}
+      <h3>Upload CSV</h3>
+      <form onSubmit={handleUpload}>
+        <input type="file" accept=".csv" onChange={e=>setFile(e.target.files[0])}/>
+        <button className="btn">Upload</button>
+      </form>
+      </div>
 
-        {/* CSV UPLOAD */}
-        <div className="upload-section">
-          <h3>Upload Timetable CSV</h3>
-          <form onSubmit={handleUpload}>
-            <input type="file" accept=".csv" onChange={(e) => setFile(e.target.files[0])} />
-            <button className="btn">Upload</button>
+      {/* EDIT MODAL */}
+      {showEdit && (
+        <div className="modal">
+          <form onSubmit={handleUpdate}>
+            <input value={editData.subject} onChange={e=>setEditData({...editData,subject:e.target.value})}/>
+            <input value={editData.teacher_id} onChange={e=>setEditData({...editData,teacher_id:e.target.value})}/>
+            <input type="time" value={editData.start_time} onChange={e=>setEditData({...editData,start_time:e.target.value})}/>
+            <input type="time" value={editData.end_time} onChange={e=>setEditData({...editData,end_time:e.target.value})}/>
+            <button>Update</button>
+            <button type="button" onClick={()=>setShowEdit(false)}>Cancel</button>
           </form>
         </div>
-
-        {/* EDIT MODAL */}
-        {showEdit && (
-          <div className="modal">
-            <div className="modal-box">
-              <h3>Edit Timetable</h3>
-
-              <form onSubmit={handleUpdate}>
-                <input value={editData.subject} onChange={(e)=>setEditData({...editData,subject:e.target.value})} />
-                <input value={editData.teacher_id} onChange={(e)=>setEditData({...editData,teacher_id:e.target.value})} />
-                <input value={editData.start_time} onChange={(e)=>setEditData({...editData,start_time:e.target.value})} />
-                <input value={editData.end_time} onChange={(e)=>setEditData({...editData,end_time:e.target.value})} />
-
-                <div className="modal-actions">
-                  <button type="submit" className="btn primary">Update</button>
-                  <button type="button" className="btn" onClick={()=>setShowEdit(false)}>Cancel</button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-      </div>
+      )}
     </AdminLayout>
   );
 }
-
-
-// import React, { useState, useEffect } from "react";
-// import axios from "axios";
-// import AdminLayout from "../components/AdminLayout";
-// import "../styles/timetable.css";
-
-// export default function TimetablePage() {
-//   const [role, setRole] = useState("");
-//   const [filters, setFilters] = useState({ department: "", year: "", division: "", teacher_id: "" });
-//   const [timetable, setTimetable] = useState([]);
-//   const [form, setForm] = useState({
-//     department: "",
-//     year: "",
-//     division: "",
-//     day_of_week: "",
-//     start_time: "",
-//     end_time: "",
-//     subject: "",
-//     teacher_id: "",
-//   });
-//   const [file, setFile] = useState(null);
-
-//   const loadTimetable = async () => {
-//     const res = await axios.get("http://127.0.0.1:8000/admin/timetable", {
-//       params: { role, ...filters },
-//     });
-//     setTimetable(res.data);
-//   };
-
-//   useEffect(() => {
-//     if (role) loadTimetable();
-//   }, [role, filters]);
-
-//   const handleAdd = async (e) => {
-//     e.preventDefault();
-//     const fd = new FormData();
-//     Object.entries(form).forEach(([k, v]) => fd.append(k, v));
-//     fd.append("role", role);
-//     await axios.post("http://127.0.0.1:8000/admin/timetable/add", fd);
-//     alert("Lecture added!");
-//     loadTimetable();
-//   };
-
-//   const handleUpload = async (e) => {
-//     e.preventDefault();
-//     const fd = new FormData();
-//     fd.append("file", file);
-//     const res = await axios.post("http://127.0.0.1:8000/admin/timetable/upload", fd);
-//     alert(`Uploaded ${res.data.added} entries`);
-//     loadTimetable();
-//   };
-
-//   return (
-//     <AdminLayout>
-//       <div className="timetable-page">
-//         <h2>Timetable Management</h2>
-
-//         {/* Select Role */}
-//         <div className="role-selector">
-//           <label>Select Role:</label>
-//           <select value={role} onChange={(e) => setRole(e.target.value)}>
-//             <option value="">-- Select --</option>
-//             <option value="student">Student</option>
-//             <option value="teacher">Teacher</option>
-//           </select>
-//         </div>
-
-//         {/* Filters for Student */}
-//         {role === "student" && (
-//           <div className="filter-group">
-//             <select onChange={(e) => setFilters({ ...filters, department: e.target.value })}>
-//               <option value="">Department</option>
-//               <option value="Computer">Computer</option>
-//               <option value="IT">IT</option>
-//             </select>
-//             <select onChange={(e) => setFilters({ ...filters, year: e.target.value })}>
-//               <option value="">Year</option>
-//               <option value="FE">FE</option>
-//               <option value="SE">SE</option>
-//               <option value="TE">TE</option>
-//               <option value="BE">BE</option>
-//             </select>
-//             <select onChange={(e) => setFilters({ ...filters, division: e.target.value })}>
-//               <option value="">Division</option>
-//               <option value="A">A</option>
-//               <option value="B">B</option>
-//             </select>
-//           </div>
-//         )}
-
-//         {/* Filters for Teacher */}
-//         {role === "teacher" && (
-//           <div className="filter-group">
-//             <input
-//               placeholder="Enter Teacher ID (e.g., T001)"
-//               onChange={(e) => setFilters({ ...filters, teacher_id: e.target.value })}
-//             />
-//           </div>
-//         )}
-
-//         {/* Add Lecture Form */}
-//         {role && (
-//           <form className="timetable-form" onSubmit={handleAdd}>
-//             {role === "student" && (
-//               <>
-//                 <input placeholder="Department" onChange={(e) => setForm({ ...form, department: e.target.value })} required />
-//                 <input placeholder="Year" onChange={(e) => setForm({ ...form, year: e.target.value })} required />
-//                 <input placeholder="Division" onChange={(e) => setForm({ ...form, division: e.target.value })} required />
-//               </>
-//             )}
-//             <select onChange={(e) => setForm({ ...form, day_of_week: e.target.value })} required>
-//               <option value="">Day</option>
-//               <option>Monday</option><option>Tuesday</option><option>Wednesday</option>
-//               <option>Thursday</option><option>Friday</option><option>Saturday</option>
-//             </select>
-//             <input type="time" onChange={(e) => setForm({ ...form, start_time: e.target.value })} required />
-//             <input type="time" onChange={(e) => setForm({ ...form, end_time: e.target.value })} required />
-//             <input placeholder="Subject" onChange={(e) => setForm({ ...form, subject: e.target.value })} required />
-//             <input placeholder="Teacher ID" onChange={(e) => setForm({ ...form, teacher_id: e.target.value })} required />
-//             <button className="btn primary" type="submit">Add Lecture</button>
-//           </form>
-//         )}
-
-//         {/* Upload CSV */}
-//         <form className="upload-form" onSubmit={handleUpload}>
-//           <label>Upload CSV:</label>
-//           <input type="file" accept=".csv" onChange={(e) => setFile(e.target.files[0])} required />
-//           <button className="btn">Upload</button>
-//         </form>
-
-//         {/* Display Timetable */}
-//         <div className="timetable-list">
-//           <h3>Timetable Entries</h3>
-//           <table>
-//             <thead>
-//               <tr>
-//                 <th>Dept</th><th>Year</th><th>Div</th><th>Day</th>
-//                 <th>Start</th><th>End</th><th>Subject</th><th>Teacher ID</th>
-//               </tr>
-//             </thead>
-//             <tbody>
-//               {timetable.length === 0 ? (
-//                 <tr><td colSpan="8" className="center">No records found</td></tr>
-//               ) : (
-//                 timetable.map((t, i) => (
-//                   <tr key={i}>
-//                     <td>{t.department}</td>
-//                     <td>{t.year}</td>
-//                     <td>{t.division}</td>
-//                     <td>{t.day_of_week}</td>
-//                     <td>{t.start_time}</td>
-//                     <td>{t.end_time}</td>
-//                     <td>{t.subject}</td>
-//                     <td>{t.teacher_id}</td>
-//                   </tr>
-//                 ))
-//               )}
-//             </tbody>
-//           </table>
-//         </div>
-//       </div>
-//     </AdminLayout>
-//   );
-// }

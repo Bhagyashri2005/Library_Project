@@ -30,7 +30,7 @@
   padding: 8px;
 }
 
-.tt-table table {
+/* .tt-table table {
   width: 100%;
   border-collapse: collapse;
   background: white;
@@ -49,7 +49,16 @@
 .tt-table td {
   padding: 12px;
   border-bottom: 1px solid #ddd;
+} */
+.tt-card {
+  background: white;
+  padding: 16px;
+  border-radius: 10px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.08);
 }
+.tt-table { width:100%; border-collapse:collapse; }
+.tt-table th{background: #f5f5f5;padding: 10px;}
+.tt-table td { padding:10px; border-bottom:1px solid #eee;background: white }
 
 .center { text-align: center; }
 
@@ -69,41 +78,69 @@
 
 .upload-section { margin-top: 20px; }
 
+/* Modal backdrop (same as members) */
 .modal {
   position: fixed;
   inset: 0;
   background: rgba(0,0,0,0.4);
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
+  z-index: 50;
 }
 
-.modal-box {
+/* Modal box */
+.modal form {
   background: white;
   padding: 20px;
-  width: 350px;
-  border-radius: 8px;
+  width: 380px;
+  border-radius: 12px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.15);
 }
 
-.modal-box input {
+/* Inputs */
+.modal input {
   width: 100%;
-  margin-bottom: 10px;
   padding: 8px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
 }
 
-.modal-actions {
-  display: flex;
-  justify-content: space-between;
+/* Buttons row */
+.modal form button {
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+
+.modal form button:first-of-type {
+  background: #4c1d95;
+  color: white;
+}
+
+.modal form button:last-of-type {
+  background: white;
+  color: #4c1d95;
+  border: 1px solid #4c1d95;
+  margin-left: 10px;
 }
 
 
-/* .members-page { padding: 20px; }
-.role-selector { margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
-.members-list table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-.members-list th, .members-list td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-.member-form input { margin: 5px; padding: 8px; border: 1px solid #ccc; border-radius: 6px; }
-.upload-section { margin-top: 15px; }
-.btn { padding: 6px 12px; border-radius: 6px; background: #7b2cbf; color: white; border: none; cursor: pointer; }
-.btn.primary { background: #5a1b9e; }
-.center { text-align: center; }
-.filter-group { display: flex; gap: 10px; margin: 10px 0; } */
+.btn.danger { background: #dc2626; }
+
+.btn.danger:hover { background: #b91c1c; }
+.tt-table tbody tr:hover .danger { opacity: 1; }
+
+/* .add-form input { margin: 5px; padding: 8px; border: 1px solid #ccc; border-radius: 6px; } */
+
+.add-form input,
+.add-form select {
+  margin: 5px;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+

@@ -53,6 +53,15 @@ export default function AdminLayout({ children }) {
               Timetable
             </li>
 
+            <li
+              onClick={() => navigate("/admin/academic-calendar")}
+              className={
+                location.pathname === "/admin/academic-calendar" ? "active" : ""
+              }
+            >
+              Academic Calendar
+            </li>
+
             {/* <li
               onClick={() => navigate("/admin/settings")}
               className={location.pathname === "/admin/settings" ? "active" : ""}

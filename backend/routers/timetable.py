@@ -8,6 +8,28 @@ router = APIRouter(prefix="/admin/timetable", tags=["Timetable"])
 # ======================================================
 # GET TIMETABLE
 # ======================================================
+def normalize_time(t):
+    if isinstance(t, int):
+        h = t // 3600
+        m = (t % 3600) // 60
+        return f"{h:02d}:{m:02d}"
+    else:
+        parts = str(t).split(":")
+        h = parts[0].zfill(2)
+        m = parts[1][:2]
+        return f"{h}:{m}"
+    
+def to_12_hour(time_str):
+    """
+    Converts 'HH:MM' -> 'HH:MM AM/PM'
+    """
+    h, m = map(int, time_str.split(":"))
+    ampm = "AM" if h < 12 else "PM"
+    h = h % 12 or 12
+    return f"{h:02d}:{m:02d} {ampm}"
+
+
+
 @router.get("/")
 def get_timetable(
     role: str = Query(None),            # student / teacher
@@ -53,6 +75,18 @@ def get_timetable(
 
     cur.execute(query, params)
     data = cur.fetchall()
+
+    # 🔧 NORMALIZE TIME FORMAT FOR FRONTEND
+    for row in data:
+        # normalize to HH:MM first
+        start = normalize_time(row["start_time"])
+        end = normalize_time(row["end_time"])
+
+        # convert to 12-hour
+        row["start_time"] = to_12_hour(start)
+        row["end_time"] = to_12_hour(end)
+
+
     conn.close()
     return data
 
@@ -151,12 +185,16 @@ def upload_timetable(file: UploadFile = File(...)):
     for row in reader:
         try:
             day_of_week = row["day_of_week"].strip().capitalize()
-            start_time = row["start_time"]
-            end_time = row["end_time"]
+            start_time = normalize_time(row["start_time"])
+            end_time = normalize_time(row["end_time"])
             type = row["type"]
             batch = row.get("batch")
 
             if day_of_week not in valid_days:
+                skipped += 1
+                continue
+
+            if type not in ["Lecture", "Practical"]:
                 skipped += 1
                 continue
 
@@ -168,13 +206,16 @@ def upload_timetable(file: UploadFile = File(...)):
                 skipped += 1
                 continue
 
+            if type == "Lecture":
+                batch = None   # ✅ THIS WAS MISSING
+
             # class clash
             cur.execute("""
                 SELECT 1 FROM timetable
                 WHERE department=%s AND year=%s AND division=%s
-                  AND day_of_week=%s
-                  AND (%s < end_time AND %s > start_time)
-                  AND (batch IS NULL OR batch=%s)
+                AND day_of_week=%s
+                AND (%s < end_time AND %s > start_time)
+                AND (batch IS NULL OR batch=%s)
             """, (
                 row["department"], row["year"], row["division"],
                 day_of_week, start_time, end_time, batch
@@ -188,7 +229,7 @@ def upload_timetable(file: UploadFile = File(...)):
             cur.execute("""
                 SELECT 1 FROM timetable
                 WHERE teacher_id=%s AND day_of_week=%s
-                  AND (%s < end_time AND %s > start_time)
+                AND (%s < end_time AND %s > start_time)
             """, (row["teacher_id"], day_of_week, start_time, end_time))
 
             if cur.fetchone():
@@ -198,7 +239,7 @@ def upload_timetable(file: UploadFile = File(...)):
             cur.execute("""
                 INSERT INTO timetable
                 (department, year, division, batch, subject,
-                 teacher_id, day_of_week, start_time, end_time, type)
+                teacher_id, day_of_week, start_time, end_time, type)
                 VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
             """, (
                 row["department"], row["year"], row["division"],
@@ -211,14 +252,12 @@ def upload_timetable(file: UploadFile = File(...)):
         except Exception:
             skipped += 1
 
+
     conn.commit()
     conn.close()
     return {"status": "success", "added": added, "skipped": skipped}
 
 
-# ======================================================
-# UPDATE TIMETABLE ENTRY
-# ======================================================
 @router.put("/update/{timetable_id}")
 def update_timetable_entry(
     timetable_id: int,
@@ -236,13 +275,17 @@ def update_timetable_entry(
     conn = get_db_connection()
     cur = conn.cursor()
 
-    cur.execute("SELECT id FROM timetable WHERE id=%s", (timetable_id,))
+    # existence check
+    cur.execute(
+        "SELECT timetable_id FROM timetable WHERE timetable_id=%s",
+        (timetable_id,)
+    )
     if not cur.fetchone():
         conn.close()
         raise HTTPException(status_code=404, detail="Timetable entry not found")
 
-    valid_days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
     day_of_week = day_of_week.strip().capitalize()
+    valid_days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 
     if day_of_week not in valid_days:
         raise HTTPException(status_code=400, detail="Invalid day_of_week")
@@ -256,37 +299,41 @@ def update_timetable_entry(
     if type == "Lecture":
         batch = None
 
-    # ---------- CLASH CHECK (EXCLUDE SAME ID) ----------
+    # class clash
     cur.execute("""
         SELECT 1 FROM timetable
-        WHERE id != %s
+        WHERE timetable_id != %s
           AND department=%s AND year=%s AND division=%s
           AND day_of_week=%s
           AND (%s < end_time AND %s > start_time)
           AND (batch IS NULL OR batch=%s)
-    """, (timetable_id, department, year, division,
-          day_of_week, start_time, end_time, batch))
-
+    """, (
+        timetable_id, department, year, division,
+        day_of_week, start_time, end_time, batch
+    ))
     if cur.fetchone():
         raise HTTPException(status_code=400, detail="Class timetable clash detected")
 
+    # teacher clash
     cur.execute("""
         SELECT 1 FROM timetable
-        WHERE id != %s
+        WHERE timetable_id != %s
           AND teacher_id=%s AND day_of_week=%s
           AND (%s < end_time AND %s > start_time)
-    """, (timetable_id, teacher_id, day_of_week, start_time, end_time))
-
+    """, (
+        timetable_id, teacher_id, day_of_week,
+        start_time, end_time
+    ))
     if cur.fetchone():
         raise HTTPException(status_code=400, detail="Teacher timetable clash detected")
 
-    # ---------- UPDATE ----------
+    # update
     cur.execute("""
         UPDATE timetable
         SET department=%s, year=%s, division=%s, batch=%s,
             subject=%s, teacher_id=%s, day_of_week=%s,
             start_time=%s, end_time=%s, type=%s
-        WHERE id=%s
+        WHERE timetable_id=%s
     """, (
         department, year, division, batch,
         subject, teacher_id, day_of_week,
@@ -341,3 +388,29 @@ def get_timetable_filters(
         "divisions": divisions,
         "batches": batches
     }
+
+# ======================================================
+# DELETE TIMETABLE ENTRY
+# ======================================================
+@router.delete("/delete/{timetable_id}")
+def delete_timetable_entry(timetable_id: int):
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute(
+        "SELECT timetable_id FROM timetable WHERE timetable_id=%s",
+        (timetable_id,)
+    )
+    if not cur.fetchone():
+        conn.close()
+        raise HTTPException(status_code=404, detail="Timetable entry not found")
+
+    cur.execute(
+        "DELETE FROM timetable WHERE timetable_id=%s",
+        (timetable_id,)
+    )
+
+    conn.commit()
+    conn.close()
+
+    return {"status": "success", "message": "Timetable entry deleted"}
