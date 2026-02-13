@@ -54,6 +54,11 @@ uvicorn main:app --reload
 ## 🔹 Database Structure (MySQL)
 
 ```sql
+
+--create db
+CREATE DATABASE IF NOT EXISTS library_access;
+USE library_access;
+
 -- Academic Calendar Table
 CREATE TABLE academic_calendar (
     event_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -116,7 +121,10 @@ CREATE TABLE timetable (
 -- Admin Table
 CREATE TABLE admin (
     admin_id INT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(50) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    role VARCHAR(20) DEFAULT 'admin'
 );
+INSERT INTO admin (username, password_hash, role)
+VALUES ('admin', '$12$w2RTvvHFfE66IdLf4fxxkeZcMfKVzRXafD2G2WkNzpi8PUSTfU4za', 'admin');
 ```

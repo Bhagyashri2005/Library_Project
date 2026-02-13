@@ -151,7 +151,7 @@ from email.mime.text import MIMEText
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
 SENDER_EMAIL = "smartlibrary.alerts@gmail.com"
-SENDER_PASSWORD = "wdyhvocimppklrku"
+SENDER_PASSWORD = ""
 
 def send_skip_email(
     teacher_email,
